@@ -1,0 +1,15 @@
+type-decl=sparse
+break-separators=after
+space-around-lists=false
+dock-collection-brackets=true
+field-space=loose
+indicate-multiline-delimiters=no
+if-then-else=fit-or-vertical
+cases-exp-indent=2
+parens-tuple-patterns=always
+nested-match=align
+leading-nested-match-parens=true
+sequence-style=terminator
+exp-grouping=preserve
+doc-comments=before
+break-collection-expressions=wrap

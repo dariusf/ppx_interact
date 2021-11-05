@@ -1,0 +1,11 @@
+(library
+ (public_name ppx_interact)
+ (kind ppx_rewriter)
+ (libraries ppxlib)
+ (preprocess
+  (pps ppxlib.metaquot)))
+
+(env
+ (dev
+  (flags
+   (:standard -warn-error -A))))

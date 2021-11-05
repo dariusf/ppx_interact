@@ -1,0 +1,6 @@
+; a standalone driver
+
+(executable
+ (name pp)
+ (modules pp)
+ (libraries ppx_interact ppxlib))
