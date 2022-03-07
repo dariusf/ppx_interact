@@ -2,12 +2,14 @@ let a () = let e = 1 in 2
 let () =
   let _ =
     let d = 3 in
-    Format.printf "At line %d in module %s, with %d variables in scope.@."
-      __LINE__ __MODULE__ 2;
-    UTop_main.interact () ~unit:__MODULE__ ~loc:__POS__
-      ~values:[V ("d", d); V ("a", a)] in
+    Format.printf
+      "At line %d in module %s, with %d variables in scope.\n\n%s\n\n@."
+      __LINE__ __MODULE__ 2 "d, a";
+    Ppx_interact.UTop_main.interact ~unit:__MODULE__ ~loc:__POS__
+      ~values:[V ("d", d); V ("a", a)] () in
   let b = 2 in
-  Format.printf "At line %d in module %s, with %d variables in scope.@."
-    __LINE__ __MODULE__ 2;
-  UTop_main.interact () ~unit:__MODULE__ ~loc:__POS__
-    ~values:[V ("b", b); V ("a", a)]
+  Format.printf
+    "At line %d in module %s, with %d variables in scope.\n\n%s\n\n@."
+    __LINE__ __MODULE__ 2 "b, a";
+  Ppx_interact.UTop_main.interact ~unit:__MODULE__ ~loc:__POS__
+    ~values:[V ("b", b); V ("a", a)] ()

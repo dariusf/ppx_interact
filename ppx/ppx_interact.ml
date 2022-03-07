@@ -40,11 +40,13 @@ let traverse () =
           let id = Exp.ident ~loc { txt = Lident e; loc } in
           [%expr V ([%e s], [%e id])]
         in
+        let debug = Ast_builder.Default.estring ~loc (String.concat "," env) in
         ( [%expr
             Format.printf
-              "At line %d in module %s, with %d variables in scope.@." __LINE__
-              __MODULE__
-              [%e Exp.constant ~loc (Const.int (List.length env))];
+              "At line %d in module %s, with %d variables in scope.%s@."
+              __LINE__ __MODULE__
+              [%e Exp.constant ~loc (Const.int (List.length env))]
+              [%e debug];
             Ppx_interact.UTop_main.interact ~unit:__MODULE__ ~loc:__POS__
               ~values:[%e build_list ~loc (List.map elt env)]
               ()],
