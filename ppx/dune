@@ -2,6 +2,7 @@
  (public_name ppx_interact)
  (kind ppx_rewriter)
  (libraries ppxlib utop)
+ (library_flags -linkall)
  (preprocess
   (pps ppxlib.metaquot)))
 
