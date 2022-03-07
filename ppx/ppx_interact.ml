@@ -32,6 +32,8 @@ let traverse () =
       let open Ast_helper in
       let (e, env) = super#expression e env in
       match e.pexp_desc with
+      | Pexp_fun (_, _, { ppat_desc = Ppat_var { txt = v; _ }; _ }, _) ->
+        (e, v :: env)
       | Pexp_extension ({ txt = s; _ }, _payload) when String.equal s "interact"
         ->
         let loc = e.pexp_loc in
@@ -40,10 +42,10 @@ let traverse () =
           let id = Exp.ident ~loc { txt = Lident e; loc } in
           [%expr V ([%e s], [%e id])]
         in
-        let debug = Ast_builder.Default.estring ~loc (String.concat "," env) in
+        let debug = Ast_builder.Default.estring ~loc (String.concat ", " env) in
         ( [%expr
             Format.printf
-              "At line %d in module %s, with %d variables in scope.%s@."
+              "At line %d in module %s, with %d variables in scope.\n\n%s\n\n@."
               __LINE__ __MODULE__
               [%e Exp.constant ~loc (Const.int (List.length env))]
               [%e debug];

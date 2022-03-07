@@ -8,4 +8,6 @@ let () =
     [%interact]
   in
   let b = 2 in
-  [%interact]
+  let f a = [%interact] in
+  [%interact];
+  f 2
