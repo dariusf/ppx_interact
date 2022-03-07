@@ -1,7 +1,7 @@
 
 (executable
  (name example)
- (libraries utop)
+ (libraries ppx_interact)
  (modes byte exe)
  (link_flags -linkall)
  (preprocess

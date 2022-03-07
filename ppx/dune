@@ -1,7 +1,7 @@
 (library
  (public_name ppx_interact)
  (kind ppx_rewriter)
- (libraries ppxlib)
+ (libraries ppxlib utop)
  (preprocess
   (pps ppxlib.metaquot)))
 

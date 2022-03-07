@@ -1,4 +1,5 @@
 open Ppxlib
+module UTop_main = UTop_main
 
 type string = label
 
@@ -44,7 +45,7 @@ let traverse () =
               "At line %d in module %s, with %d variables in scope.@." __LINE__
               __MODULE__
               [%e Exp.constant ~loc (Const.int (List.length env))];
-            UTop_main.interact ~unit:__MODULE__ ~loc:__POS__
+            Ppx_interact.UTop_main.interact ~unit:__MODULE__ ~loc:__POS__
               ~values:[%e build_list ~loc (List.map elt env)]
               ()],
           env )
