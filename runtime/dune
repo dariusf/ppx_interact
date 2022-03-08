@@ -1,0 +1,21 @@
+
+(include_subdirs unqualified)
+
+(library
+ (public_name ppx_interact_runtime)
+;  (kind ppx_rewriter)
+;  (libraries ppxlib)
+ (libraries compiler-libs.toplevel unix)
+;  )
+;  (library_flags -linkall)
+
+ (foreign_stubs (language c) (names linenoise_src linenoise_stubs))
+
+;  (preprocess
+;   (pps ppxlib.metaquot))
+  )
+
+(env
+ (dev
+  (flags
+   (:standard -warn-error -A))))

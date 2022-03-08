@@ -14,3 +14,8 @@
  (name ppx_interact)
  (synopsis "Opens a REPL in context")
  (description "An attempt at the pry/pdb experience"))
+
+(package
+ (name ppx_interact_runtime)
+ (synopsis "Opens a REPL in context")
+ (description "Runtime library for ppx_interact"))

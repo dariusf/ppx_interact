@@ -5,18 +5,18 @@ let () =
     Format.printf
       "At line %d in module %s, with %d variables in scope.\n\n%s\n\n@."
       __LINE__ __MODULE__ 2 "d, a";
-    Ppx_interact.UTop_main.interact ~unit:__MODULE__ ~loc:__POS__
+    Ppx_interact_runtime.interact ~unit:__MODULE__ ~loc:__POS__
       ~values:[V ("d", d); V ("a", a)] () in
   let b = 2 in
   let f a =
     Format.printf
       "At line %d in module %s, with %d variables in scope.\n\n%s\n\n@."
-      __LINE__ __MODULE__ 2 "b, a";
-    Ppx_interact.UTop_main.interact ~unit:__MODULE__ ~loc:__POS__
-      ~values:[V ("b", b); V ("a", a)] () in
+      __LINE__ __MODULE__ 3 "a, b, a";
+    Ppx_interact_runtime.interact ~unit:__MODULE__ ~loc:__POS__
+      ~values:[V ("a", a); V ("b", b); V ("a", a)] () in
   (Format.printf
      "At line %d in module %s, with %d variables in scope.\n\n%s\n\n@."
      __LINE__ __MODULE__ 3 "f, b, a";
-   Ppx_interact.UTop_main.interact ~unit:__MODULE__ ~loc:__POS__
+   Ppx_interact_runtime.interact ~unit:__MODULE__ ~loc:__POS__
      ~values:[V ("f", f); V ("b", b); V ("a", a)] ());
   f 2

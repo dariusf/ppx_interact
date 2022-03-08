@@ -1,8 +1,10 @@
 
 (executable
  (name example)
- (libraries ppx_interact)
+ ; (libraries ppx_interact)
+ (libraries ppx_interact_runtime compiler-libs.toplevel unix)
  (modes byte exe)
+ (ocamlc_flags (:standard -custom))
  (link_flags -linkall)
  (preprocess
   (pps ppx_interact)))
