@@ -1,8 +1,14 @@
+
+(include_subdirs unqualified)
+
 (library
  (public_name ppx_interact)
  (kind ppx_rewriter)
- (libraries ppxlib utop)
- (library_flags -linkall)
+ (libraries ppxlib)
+;  (library_flags -linkall)
+
+ (foreign_stubs (language c) (names linenoise_src linenoise_stubs))
+
  (preprocess
   (pps ppxlib.metaquot)))
 
