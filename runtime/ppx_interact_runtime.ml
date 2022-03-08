@@ -13,33 +13,6 @@ exception Term of int
 
 type value = V : string * _ -> value
 
-(* let common_init ~initial_env =
-   (* Initializes toplevel environment. *)
-   (match initial_env with
-   | None -> Toploop.initialize_toplevel_env ()
-   | Some env ->
-     print_endline "set env";
-     Toploop.toplevel_env := env);
-   (* Set the global input name. *)
-   (* Make sure SIGINT is catched while executing OCaml code. *)
-   Sys.catch_break true;
-
-   (* Load system init files. *)
-
-   (* Load history after the initialization file so the user can change
-      the history file name. *)
-   (* Install signal handlers. *)
-   let behavior = Sys.Signal_handle (fun signo -> raise (Term signo)) in
-   let catch signo =
-     try Sys.set_signal signo behavior
-     with _ -> (* All signals may not be supported on some OS. *)
-               ()
-   in
-   (* We lost the terminal. *)
-   catch Sys.sighup;
-   (* Termination request. *)
-   catch Sys.sigterm *)
-
 let walk dir ~init ~f =
   let rec loop dir acc =
     let acc = f dir acc in
@@ -53,8 +26,8 @@ let walk dir ~init ~f =
   | exception Unix.Unix_error (ENOENT, _, _) -> init
   | _ -> loop dir init
 
-let interact ?(search_path = []) ?(build_dir = "_build") ~unit
-    ~loc:(fname, lnum, cnum, _) ~values () =
+let interact ?(use_linenoise = true) ?(search_path = []) ?(build_dir = "_build")
+    ~unit ~loc:(fname, lnum, cnum, _) ~values () =
   Toploop.initialize_toplevel_env ();
   let search_path =
     walk build_dir ~init:search_path ~f:(fun dir acc -> dir :: acc)
@@ -98,16 +71,12 @@ let interact ?(search_path = []) ?(build_dir = "_build") ~unit
     end;
     failwith "Couldn't find location in cmt file"
   with Found env ->
-    (* print_endline "found loc"; *)
     (try
        List.iter Topdirs.dir_directory (search_path @ cmt_infos.cmt_loadpath);
        let env = Envaux.env_of_only_summary env in
-       (* let _ = values in *)
        List.iter
          (fun (V (name, v)) -> Toploop.setvalue name (Obj.repr v))
          values;
-       (* Toploop.setvalue "a" (Obj.repr a); *)
-       (* Toploop.toplevel_env := env; *)
        Toploop.toplevel_env := env;
        (* let idents = Env.diff Env.empty env in *)
        (* List.iter print_endline (List.map Ident.name idents); *)
@@ -117,66 +86,30 @@ let interact ?(search_path = []) ?(build_dir = "_build") ~unit
          ignore (Toploop.execute_phrase true Format.std_formatter phrase)
        in
 
-       (* print_endline "about to eval"; *)
-
-       (* this worked *)
        (* eval "b;;"; *)
        (* eval "let c = b + 1;;"; *)
        (* let v : int = Obj.obj (Toploop.getvalue "c") in *)
-       (* Format.printf "thing %d@." v; *)
-       (* print_endline "ok"; *)
-
-       (* Toploop.execute_phrase; *)
-       (* Toploop.execute_phrase true Format.std_formatter phrase; *)
-       (* Toploop.read_interactive_input := read_input_classic; *)
-       (* this doesn't work *)
-       (* Toploop.loop Format.std_formatter *)
-       (* while true do *)
-       (* let s = read_line () in *)
-       (* eval s *)
-       let rec user_input prompt cb =
-         match LNoise.linenoise prompt with
-         | None -> ()
-         | Some v ->
-           cb v;
-           user_input prompt cb
-       in
-       user_input "> " (fun s ->
-           if s = "quit" then exit 0;
-           (* LNoise.history_add from_user |> ignore; *)
-           (* LNoise.history_save ~filename:"history.txt" |> ignore; *)
-           (* Printf.sprintf "Got: %s" from_user |> print_endline *)
-           eval s)
-       (* done *)
+       (* Format.printf "v = %d@." v; *)
+       match use_linenoise with
+       | false ->
+         while true do
+           let s = read_line () in
+           eval s
+         done
+       | true ->
+         let rec user_input prompt cb =
+           match LNoise.linenoise prompt with
+           | None -> ()
+           | Some v ->
+             cb v;
+             user_input prompt cb
+         in
+         user_input "> " (fun s ->
+             if s = "quit" then exit 0;
+             (* LNoise.history_add from_user |> ignore; *)
+             (* LNoise.history_save ~filename:"history.txt" |> ignore; *)
+             (* Printf.sprintf "Got: %s" from_user |> print_endline *)
+             eval s)
      with exn ->
        Location.report_exception Format.err_formatter exn;
        exit 2)
-(*
-let main () =
-  (* let ppf = Format.err_formatter in
-     (* let program = "ocaml" in *)
-     Compenv.readenv ppf Before_args;
-     (* Clflags.add_arguments __LOC__ Options.list; *)
-     (* Compenv.parse_arguments ~current argv file_argument program; *)
-     Compenv.readenv ppf Before_link;
-     Compmisc.read_clflags_from_env ();
-     (* if not (prepare ppf) then raise (Compenv.Exit_with_status 2); *)
-     Compmisc.init_path ();
-     eval "let a = 0;;";
-     Toploop.setvalue "a" (Obj.repr a);
-     Toploop.loop Format.std_formatter *)
-  (* interact () *)
-
-  (* Ppx_interact.UTop_main. *)
-  let b = 2 in
-  interact ~unit:__MODULE__ ~loc:__POS__
-    ~values:[V ("b", b); V ("walk", walk)]
-    ()
-(* ;
-
-   let d = Lib.info in
-   let b = 2 in
-   [%interact];
-   let c = 3 in
-   [%interact] *)
-*)

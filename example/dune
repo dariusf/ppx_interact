@@ -1,10 +1,10 @@
 
 (executable
  (name example)
- ; (libraries ppx_interact)
- (libraries ppx_interact_runtime compiler-libs.toplevel unix)
- (modes byte exe)
- (ocamlc_flags (:standard -custom))
+ ; the containers dependency isn't strictly needed,
+ ; it's just to show that third-party libraries can be used
+ (libraries ppx_interact_runtime containers)
+ (modes byte_complete)
  (link_flags -linkall)
  (preprocess
   (pps ppx_interact)))
