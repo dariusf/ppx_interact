@@ -104,6 +104,20 @@ let interact ?(use_linenoise = true) ?(search_path = []) ?(build_dir = "_build")
              f v;
              user_input prompt f
          in
+         (* this goes from front-to-back, which is the right order, so more recent bindings are suggested first *)
+         LNoise.set_hints_callback (fun inp ->
+             match inp with
+             | "" -> None
+             | _ ->
+               Option.bind
+                 (List.find_opt (String.starts_with ~prefix:inp) names)
+                 (fun sugg ->
+                   let sl = String.length sugg in
+                   let il = String.length inp in
+                   if il < sl then
+                     let s = String.sub sugg il (sl - il) in
+                     Some (s, LNoise.White, false)
+                   else None));
          LNoise.set_completion_callback (fun so_far ln_completions ->
              List.filter (String.starts_with ~prefix:so_far) names
              |> List.iter (LNoise.add_completion ln_completions));
