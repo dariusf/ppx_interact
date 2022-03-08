@@ -84,6 +84,7 @@ let interact ?(use_linenoise = true) ?(search_path = []) ?(build_dir = "_build")
          let phrase = !Toploop.parse_toplevel_phrase lexbuf in
          ignore (Toploop.execute_phrase true Format.std_formatter phrase)
        in
+       let names = List.map (fun (V (name, _)) -> name) values in
 
        (* eval "b;;"; *)
        (* eval "let c = b + 1;;"; *)
@@ -96,18 +97,25 @@ let interact ?(use_linenoise = true) ?(search_path = []) ?(build_dir = "_build")
            eval s
          done
        | true ->
-         let rec user_input prompt cb =
+         let rec user_input prompt f =
            match LNoise.linenoise prompt with
            | None -> ()
            | Some v ->
-             cb v;
-             user_input prompt cb
+             f v;
+             user_input prompt f
          in
+         LNoise.set_completion_callback (fun so_far ln_completions ->
+             List.filter (String.starts_with ~prefix:so_far) names
+             |> List.iter (LNoise.add_completion ln_completions));
          user_input "> " (fun s ->
-             if s = "quit" then exit 0;
-             (* LNoise.history_add from_user |> ignore; *)
+             let s = String.trim s in
+             let doesn't_end_with_semicolons s =
+               let l = String.length s in
+               l < 2 || String.sub s (l - 2) 2 <> ";;"
+             in
+             let s = if doesn't_end_with_semicolons s then s ^ ";;" else s in
+             LNoise.history_add s |> ignore;
              (* LNoise.history_save ~filename:"history.txt" |> ignore; *)
-             (* Printf.sprintf "Got: %s" from_user |> print_endline *)
              eval s)
      with exn ->
        Location.report_exception Format.err_formatter exn;
