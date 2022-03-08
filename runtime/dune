@@ -1,15 +1,15 @@
 
-(include_subdirs unqualified)
+; (include_subdirs unqualified)
 
 (library
  (public_name ppx_interact_runtime)
 ;  (kind ppx_rewriter)
 ;  (libraries ppxlib)
- (libraries compiler-libs.toplevel unix)
+ (libraries compiler-libs.toplevel unix linenoise)
 ;  )
 ;  (library_flags -linkall)
 
- (foreign_stubs (language c) (names linenoise_src linenoise_stubs))
+;  (foreign_stubs (language c) (names linenoise_src linenoise_stubs))
 
 ;  (preprocess
 ;   (pps ppxlib.metaquot))
