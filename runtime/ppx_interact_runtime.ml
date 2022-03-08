@@ -5,7 +5,7 @@ let eval text =
 
 let get_required_label name args =
   match List.find (fun (lab, _) -> lab = Asttypes.Labelled name) args with
-  | (_, x) -> x
+  | _, x -> x
   | exception Not_found -> None
 
 exception Found of Env.t
@@ -47,13 +47,12 @@ let interact ?(use_linenoise = true) ?(search_path = []) ?(build_dir = "_build")
           match
             (get_required_label "loc" args, get_required_label "values" args)
           with
-          | (Some l, Some v) ->
+          | Some l, Some v ->
             let pos = l.exp_loc.loc_start in
             if
               pos.pos_fname = fname && pos.pos_lnum = lnum
               && pos.pos_cnum - pos.pos_bol = cnum
-            then
-              raise (Found v.exp_env)
+            then raise (Found v.exp_env)
           | _ -> next e
         with Not_found -> next e
       end

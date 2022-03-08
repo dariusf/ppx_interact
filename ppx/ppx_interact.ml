@@ -14,12 +14,12 @@ let traverse () =
     inherit [string list] Ast_traverse.fold_map as super
 
     method! value_binding vb env =
-      let (v, _) = super#value_binding vb env in
+      let v, _ = super#value_binding vb env in
       let name = get_name v.pvb_pat in
       (v, name @ env)
 
     method! structure_item s env =
-      let (s1, env) = super#structure_item s env in
+      let s1, env = super#structure_item s env in
       (* TODO mutually recursive bindings *)
       match s.pstr_desc with Pstr_value (_, _) | _ -> (s1, env)
 
@@ -28,7 +28,7 @@ let traverse () =
       match e.pexp_desc with
       | Pexp_fun (_, _, { ppat_desc = Ppat_var { txt = v; _ }; _ }, _) ->
         (* update, and only then recurse into subexpressions *)
-        let (e, env) = super#expression e (v :: env) in
+        let e, env = super#expression e (v :: env) in
         (e, env)
       | Pexp_extension ({ txt = s; _ }, _payload) when String.equal s "interact"
         ->
@@ -44,16 +44,14 @@ let traverse () =
           if dump_variables then
             Ast.estring ~loc
               ("\n\n" ^ String.concat ", " (List.rev env) ^ "\n\n")
-          else
-            [%expr ""]
+          else [%expr ""]
         in
         let variable_stats =
           if count_variables then
             [%expr
               Format.sprintf ", with %d variables in scope"
                 [%e Exp.constant ~loc (Const.int (List.length env))]]
-          else
-            [%expr ""]
+          else [%expr ""]
         in
         let status_print =
           [%expr
@@ -83,7 +81,7 @@ let traverse () =
   end
 
 let transform_impl str =
-  let (s, _) = (traverse ())#structure str [] in
+  let s, _ = (traverse ())#structure str [] in
   s
 
 let () = Driver.register_transformation ~impl:transform_impl "ppx_interact"

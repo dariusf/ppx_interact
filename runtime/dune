@@ -1,4 +1,3 @@
-
 (library
  (public_name ppx_interact_runtime)
  (libraries compiler-libs.toplevel unix linenoise))

@@ -1,4 +1,3 @@
-
 (library
  (public_name ppx_interact)
  (kind ppx_rewriter)
