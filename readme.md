@@ -28,7 +28,7 @@ let () =
 A REPL will start when it is hit, allowing arbitrary expressions to be evaluated using variables in scope.
 
 ```
-$ dune exec example/example.bc.exe
+$ dune exec example/example.bc
 hello!
 At line 6 in module Dune__exe__Example.
 > succ;;
@@ -55,15 +55,15 @@ Build a bytecode executable using the following setup:
 -  (name example))
 +  (name example)
 +  (libraries ppx_interact_runtime)
-+  (modes byte_complete)
++  (modes byte)
 +  (link_flags -linkall)
 +  (preprocess
 +   (pps ppx_interact)))
 ```
 
 - The preprocessor and runtime library are standard
+- A bytecode executable must be built
 - `-linkall` is typical for [building custom toplevels](https://dune.readthedocs.io/en/stable/quick-start.html#building-a-custom-toplevel) and allows the use of external libraries
-- The [`byte_complete` linking mode](https://dune.readthedocs.io/en/stable/dune-files.html?highlight=byte_complete#linking-modes) is required in bytecode programs which link against C code
 
 See the [example project](example) for the full setup.
 
@@ -84,28 +84,4 @@ An early version of this used a tweaked utop as a runtime dependency, but that c
 - [Transitive dependencies can't (yet) be vendored easily without manually mangling names](https://github.com/ocaml/dune/issues/3335)
 - utop's completion system doesn't pick up some bindings, for unknown reasons
 
-As such, the current version uses only the [essential code](https://github.com/ocaml-community/utop/blob/master/src/lib/uTop_main.ml) from utop interact, and vendors [linenoise](https://github.com/ocaml-community/ocaml-linenoise/) to provide a usable REPL with completions (there's also some unknown issue with combining `Toploop.loop` and utop interact).
-
-This necessitates the use of a C library and `byte_complete`.
-An alternative would be Down's [pure OCaml readline implementation](https://github.com/dbuenzli/down/blob/master/src/down.ml), but it seems vendoring is unavoidable.
-
-There are a few alternatives to `byte_complete` detailed [here](https://github.com/ocaml/dune/issues/108).
-Two which work are:
-
-1. Using `-custom`, which is unofficially deprecated
-
-```diff
-+  (modes byte_complete)
--  (ocamlc_flags (:standard -custom))
-```
-
-2. Adding the ppx build directory to `CAML_LD_LIBRARY_PATH`
-
-```diff
-+  (modes byte_complete)
--  (modes byte)
-```
-
-```sh
-CAML_LD_LIBRARY_PATH=_build/default/ppx/:$CAML_LD_LIBRARY_PATH dune exec example/example.bc
-```
+As such, the current version uses only the [essential code](https://github.com/ocaml-community/utop/blob/master/src/lib/uTop_main.ml) from utop interact, and uses [linenoise](https://github.com/ocaml-community/ocaml-linenoise/) to provide a usable REPL with completions (there's also some unknown issue with combining `Toploop.loop` and utop interact).
