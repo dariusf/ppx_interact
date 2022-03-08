@@ -2,9 +2,8 @@
 # ppx_interact
 
 Many interactive debuggers (pdb, pry, jdb, node inspect, ...) allow arbitrary code to be evaluated when stopped at breakpoints, which is very useful for debugging.
-
 ocamldebug has limited support for this, [only allowing field and variable values to be read](https://ocaml.org/manual/debugger.html#s%3Adebugger-examining-values).
-This project attempts to lift this restriction.
+This project attempts to fill this gap.
 
 # Usage
 
@@ -35,7 +34,7 @@ At line 6 in module Dune__exe__Example.
 - : int -> int = <fun>
 > List.length xs + succ a;;
 - : int = 6
->
+> ^D
 goodbye!
 ```
 
@@ -69,11 +68,11 @@ See the [example project](example) for the full setup.
 
 # Experiences
 
-I've tried this out on a small project (500 LoC), and it works without any noticeable overhead.
+I've tried this out on a small project (500 LoC) and it works without any noticeable overhead.
 
 # Design
 
-The approach was [pioneered](https://sympa.inria.fr/sympa/arc/caml-list/2017-05/msg00124.html) [by](https://github.com/ocaml-community/utop/issues/158) [utop](https://github.com/ocaml-community/utop/tree/master/examples/interact):
+The idea was [originated](https://sympa.inria.fr/sympa/arc/caml-list/2017-05/msg00124.html) [by](https://github.com/ocaml-community/utop/issues/158) [utop](https://github.com/ocaml-community/utop/tree/master/examples/interact):
 
 > utop interact: this is an experimental feature that has existed for a while. However it is a bit painful to setup so it is currently undocumented. However, properly packaged and maybe with the help of a compiler plugin this could be a killer feature.
 >
