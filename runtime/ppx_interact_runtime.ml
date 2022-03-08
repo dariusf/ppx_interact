@@ -130,7 +130,8 @@ let interact ?(use_linenoise = true) ?(search_path = []) ?(build_dir = "_build")
              let s = if doesn't_end_with_semicolons s then s ^ ";;" else s in
              LNoise.history_add s |> ignore;
              (* LNoise.history_save ~filename:"history.txt" |> ignore; *)
-             eval s)
+             try eval s
+             with exn -> Location.report_exception Format.err_formatter exn)
      with exn ->
        Location.report_exception Format.err_formatter exn;
        exit 2)
