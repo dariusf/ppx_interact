@@ -9,33 +9,84 @@ let get_name p =
 let build_list ~loc xs =
   List.fold_right (fun c t -> [%expr [%e c] :: [%e t]]) xs [%expr []]
 
+let build_qmodule xs =
+  match xs with
+  | [] -> failwith "invalid empty identifier"
+  | [x] -> Lident x
+  | x :: xs -> List.fold_left (fun t c -> Ldot (t, c)) (Lident x) xs
+
+type env = {
+  bindings : (string * string list * Longident.t) list;
+  module_context : string list;
+}
+
+let empty_env = { module_context = []; bindings = [] }
+
 let traverse () =
   object
-    inherit [string list] Ast_traverse.fold_map as super
+    inherit [env] Ast_traverse.fold_map as super
 
     method! value_binding vb env =
       let v, _ = super#value_binding vb env in
       let name = get_name v.pvb_pat in
-      (v, name @ env)
+      ( v,
+        {
+          env with
+          bindings =
+            List.map
+              (fun n ->
+                let ident =
+                  match env.module_context with
+                  | [] -> Lident n
+                  | _ -> build_qmodule (List.rev (n :: env.module_context))
+                in
+                (n, env.module_context, ident))
+              name
+            @ env.bindings;
+        } )
 
     method! structure_item s env =
-      let s1, env = super#structure_item s env in
-      (* TODO mutually recursive bindings *)
-      match s.pstr_desc with Pstr_value (_, _) | _ -> (s1, env)
+      match s.pstr_desc with
+      | Pstr_module { pmb_name = { txt = Some name; _ }; _ } ->
+        let s, env1 =
+          super#structure_item s
+            { env with module_context = name :: env.module_context }
+        in
+        (* restore the old module context as we exit *)
+        (s, { env1 with module_context = env.module_context })
+      | Pstr_value (_, _) ->
+        (* TODO mutually recursive bindings *)
+        super#structure_item s env
+      | _ -> super#structure_item s env
 
     method! expression e env =
       let open Ast_helper in
       match e.pexp_desc with
       | Pexp_fun (_, _, { ppat_desc = Ppat_var { txt = v; _ }; _ }, _) ->
         (* update, and only then recurse into subexpressions *)
-        let e, env = super#expression e (v :: env) in
+        let e, env =
+          super#expression e
+            {
+              env with
+              bindings = (v, env.module_context, Lident v) :: env.bindings;
+            }
+        in
         (e, env)
       | Pexp_extension ({ txt = s; _ }, _payload) when String.equal s "interact"
         ->
         let loc = e.pexp_loc in
-        let elt e =
-          let s = Exp.constant ~loc (Const.string ~loc e) in
-          let id = Exp.ident ~loc { txt = Lident e; loc } in
+        let elt (name, original_ctx, ident) =
+          let s = Exp.constant ~loc (Const.string ~loc name) in
+          let id =
+            Exp.ident ~loc
+              {
+                txt =
+                  (* check at the use site if we're still in that module, if so don't qualify *)
+                  (if env.module_context != original_ctx then ident
+                  else Lident name);
+                loc;
+              }
+          in
           [%expr V ([%e s], [%e id])]
         in
         let dump_variables = false in
@@ -43,14 +94,17 @@ let traverse () =
         let debug =
           if dump_variables then
             Ast.estring ~loc
-              ("\n\n" ^ String.concat ", " (List.rev env) ^ "\n\n")
+              ("\n\n"
+              ^ String.concat ", "
+                  (env.bindings |> List.rev |> List.map (fun (a, _, _) -> a))
+              ^ "\n\n")
           else [%expr ""]
         in
         let variable_stats =
           if count_variables then
             [%expr
               Format.sprintf ", with %d variables in scope"
-                [%e Exp.constant ~loc (Const.int (List.length env))]]
+                [%e Exp.constant ~loc (Const.int (List.length env.bindings))]]
           else [%expr ""]
         in
         let status_print =
@@ -65,12 +119,12 @@ let traverse () =
           | true ->
             [%expr
               Ppx_interact.UTop_main.interact ~unit:__MODULE__ ~loc:__POS__
-                ~values:[%e build_list ~loc (List.map elt env)]
+                ~values:[%e build_list ~loc (List.map elt env.bindings)]
                 ()]
           | false ->
             [%expr
               Ppx_interact_runtime.interact ~unit:__MODULE__ ~loc:__POS__
-                ~values:[%e build_list ~loc (List.map elt env)]
+                ~values:[%e build_list ~loc (List.map elt env.bindings)]
                 ()]
         in
         ( [%expr
@@ -81,7 +135,7 @@ let traverse () =
   end
 
 let transform_impl str =
-  let s, _ = (traverse ())#structure str [] in
+  let s, _ = (traverse ())#structure str empty_env in
   s
 
 let () = Driver.register_transformation ~impl:transform_impl "ppx_interact"

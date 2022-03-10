@@ -1,16 +1,41 @@
+module A = struct let one = 1
+                  module C = struct let nested = 1 end end
 let a () = let e = 1 in 2
 let () =
   let _ =
     let d = 3 in
     Format.printf "At line %d in module %s%s.%s@." __LINE__ __MODULE__ "" "";
     Ppx_interact_runtime.interact ~unit:__MODULE__ ~loc:__POS__
-      ~values:[V ("d", d); V ("a", a)] () in
+      ~values:[V ("d", d);
+              V ("a", a);
+              V ("nested", A.C.nested);
+              V ("one", A.one)] () in
   let b = 2 in
   let f a =
     Format.printf "At line %d in module %s%s.%s@." __LINE__ __MODULE__ "" "";
     Ppx_interact_runtime.interact ~unit:__MODULE__ ~loc:__POS__
-      ~values:[V ("a", a); V ("b", b); V ("a", a)] () in
+      ~values:[V ("a", a);
+              V ("b", b);
+              V ("a", a);
+              V ("nested", A.C.nested);
+              V ("one", A.one)] () in
   (Format.printf "At line %d in module %s%s.%s@." __LINE__ __MODULE__ "" "";
    Ppx_interact_runtime.interact ~unit:__MODULE__ ~loc:__POS__
-     ~values:[V ("f", f); V ("b", b); V ("a", a)] ());
+     ~values:[V ("f", f);
+             V ("b", b);
+             V ("a", a);
+             V ("nested", A.C.nested);
+             V ("one", A.one)] ());
   f 2
+module B =
+  struct
+    let inside = 2
+    let () =
+      Format.printf "At line %d in module %s%s.%s@." __LINE__ __MODULE__ ""
+        "";
+      Ppx_interact_runtime.interact ~unit:__MODULE__ ~loc:__POS__
+        ~values:[V ("inside", inside);
+                V ("a", a);
+                V ("nested", A.C.nested);
+                V ("one", A.one)] ()
+  end
