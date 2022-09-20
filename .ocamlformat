@@ -1,5 +1,5 @@
 profile = default
-version = 0.20.1
+version = 0.21.0
 
 type-decl=sparse
 break-separators=after
