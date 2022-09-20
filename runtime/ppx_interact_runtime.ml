@@ -27,7 +27,7 @@ let walk dir ~init ~f =
   | _ -> loop dir init
 
 let interact ?(use_linenoise = true) ?(search_path = []) ?(build_dir = "_build")
-    ~unit ~loc:(fname, lnum, cnum, _) ~values () =
+    ~unit ~loc:(fname, lnum, cnum, _) ?(init = []) ~values () =
   Toploop.initialize_toplevel_env ();
   let search_path =
     walk build_dir ~init:search_path ~f:(fun dir acc -> dir :: acc)
@@ -85,6 +85,14 @@ let interact ?(use_linenoise = true) ?(search_path = []) ?(build_dir = "_build")
          ignore (Toploop.execute_phrase true Format.std_formatter phrase)
        in
        let names = List.map (fun (V (name, _)) -> name) values in
+
+       List.iter
+         (fun line ->
+           try eval line
+           with exn ->
+             Format.printf "initialization failed: %s@." line;
+             Location.report_exception Format.err_formatter exn)
+         init;
 
        (* eval "b;;"; *)
        (* eval "let c = b + 1;;"; *)
