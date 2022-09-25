@@ -1,13 +1,7 @@
 
 # ppx_interact
 
-Many interactive debuggers (pdb, pry, jdb, node inspect, ...) allow arbitrary code to be evaluated when stopped at breakpoints, which is very useful for debugging.
-ocamldebug has limited support for this, [only allowing field and variable values to be read](https://ocaml.org/manual/debugger.html#s%3Adebugger-examining-values).
-This project attempts to fill this gap.
-
-# Usage
-
-A few prerequisites: you have a Dune project and are building an executable, not a library (expect tests are a WIP).
+Interactive breakpoints!
 
 Use the extension node `[%interact]` to set a breakpoint, like the `debugger` statement in JS.
 
@@ -45,7 +39,7 @@ External libraries work as well.
 - : CCInt.t CCList.t = [2; 3; 4]
 ```
 
-# Setup
+# Usage
 
 Build a bytecode executable using the following setup:
 
@@ -61,16 +55,18 @@ Build a bytecode executable using the following setup:
 ```
 
 - The preprocessor and runtime library are standard
-- A bytecode executable must be built
+- The executable must be built in bytecode mode
 - `-linkall` is typical for [building custom toplevels](https://dune.readthedocs.io/en/stable/quick-start.html#building-a-custom-toplevel) and allows the use of external libraries
 
 See the [example project](example) for the full setup.
 
-# Experiences
+Currently this only works with executables, and not expect tests in libraries ([open PR](https://github.com/ocaml/dune/pull/5622)).
 
-I've tried this out on a small project (500 LoC) and it works without any noticeable overhead.
+The runtime library of this project can also be used standalone to support scripting use cases, e.g. in [ppx_debug](https://github.com/dariusf/ppx_debug).
 
 # Design
+
+Unlike many interactive debuggers (pdb, pry, jdb, node inspect, ...), ocamldebug has limited support for evaluating code when stopped at breakpoints, [only allowing field and variable values to be read](https://v2.ocaml.org/manual/debugger.html#s%3Adebugger-examining-values).
 
 The idea was [originated](https://sympa.inria.fr/sympa/arc/caml-list/2017-05/msg00124.html) [by](https://github.com/ocaml-community/utop/issues/158) [utop](https://github.com/ocaml-community/utop/tree/master/examples/interact):
 
@@ -83,4 +79,4 @@ An early version of this used a tweaked utop as a runtime dependency, but that c
 - [Transitive dependencies can't (yet) be vendored easily without manually mangling names](https://github.com/ocaml/dune/issues/3335)
 - utop's completion system doesn't pick up some bindings, for unknown reasons
 
-As such, the current version uses only the [essential code](https://github.com/ocaml-community/utop/blob/master/src/lib/uTop_main.ml) from utop interact, and uses [linenoise](https://github.com/ocaml-community/ocaml-linenoise/) to provide a usable REPL with completions (there's also some unknown issue with combining [`Toploop.loop`](https://github.com/ocaml/ocaml/blob/trunk/toplevel/toploop.ml) and utop interact).
+As such, the current version uses only the [essential code](https://github.com/ocaml-community/utop/blob/master/src/lib/uTop_main.ml) from utop interact, and uses [linenoise](https://github.com/ocaml-community/ocaml-linenoise/) to provide a usable REPL with completions (there are also issues with combining [`Toploop.loop`](https://github.com/ocaml/ocaml/blob/trunk/toplevel/toploop.ml) and utop interact).
