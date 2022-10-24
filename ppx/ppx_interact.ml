@@ -3,6 +3,8 @@ module Ast = Ast_builder.Default
 
 type string = label
 
+let ret_name = "_ret"
+
 let get_name p =
   match p.ppat_desc with Ppat_var { txt = s; _ } -> [s] | _ -> []
 
@@ -72,7 +74,7 @@ let traverse () =
             }
         in
         (e, env)
-      | Pexp_extension ({ txt = s; _ }, _payload) when String.equal s "interact"
+      | Pexp_extension ({ txt = s; _ }, payload) when String.equal s "interact"
         ->
         let loc = e.pexp_loc in
         let elt (name, original_ctx, ident) =
@@ -114,23 +116,44 @@ let traverse () =
         in
         (* turning this back on requires utop to be added as a runtime dependency *)
         let utop = false in
+        let return_type = match payload with PTyp t -> Some t | _ -> None in
+        let all_bindings =
+          match return_type with
+          | None -> env.bindings
+          | Some _ -> (ret_name, [], Lident ret_name) :: env.bindings
+        in
+        let elts = List.map elt all_bindings in
         let toplevel =
           match utop with
           | true ->
             [%expr
               Ppx_interact.UTop_main.interact ~unit:__MODULE__ ~loc:__POS__
-                ~values:[%e build_list ~loc (List.map elt env.bindings)]
-                ()]
+                ~values:[%e build_list ~loc elts] ()]
           | false ->
             [%expr
               Ppx_interact_runtime.interact ~unit:__MODULE__ ~loc:__POS__
-                ~values:[%e build_list ~loc (List.map elt env.bindings)]
-                ()]
+                ~values:[%e build_list ~loc elts] ()]
         in
-        ( [%expr
+        let breakpoint =
+          [%expr
             [%e status_print];
-            [%e toplevel]],
-          env )
+            [%e toplevel]]
+        in
+        let breakpoint_ret =
+          let ret_pat = Ast.ppat_var ~loc { loc; txt = ret_name } in
+          let ret_var = Ast.pexp_ident ~loc { loc; txt = Lident ret_name } in
+          let ref_type t =
+            Ast.ptyp_constr ~loc { loc; txt = Lident "ref" } [t]
+          in
+          match return_type with
+          | Some t ->
+            [%expr
+              let ([%p ret_pat] : [%t ref_type t]) = ref (Obj.magic ()) in
+              [%e breakpoint];
+              ![%e ret_var]]
+          | None -> breakpoint
+        in
+        (breakpoint_ret, env)
       | _ -> super#expression e env
   end
 

@@ -39,6 +39,21 @@ External libraries work as well.
 - : CCInt.t CCList.t = [2; 3; 4]
 ```
 
+Use a type payload to specify the return type of the extension node. The return value is given by assigning to the write-only ref `_ret`.
+
+```ocaml
+let x = [%interact: int] in
+Format.printf "x = %d@." x
+```
+
+```
+At line 1 in module Dune__exe__Example.
+> _ret := 3
+- : unit = ()
+> ^D
+x = 3
+```
+
 # Usage
 
 Build a bytecode executable using the following setup:
@@ -64,7 +79,7 @@ Currently this only works with executables, and not expect tests in libraries ([
 
 The runtime library of this project can also be used standalone to support scripting use cases, e.g. in [ppx_debug](https://github.com/dariusf/ppx_debug).
 
-# Design
+# Background
 
 Unlike many interactive debuggers (pdb, pry, jdb, node inspect, ...), ocamldebug has limited support for evaluating code when stopped at breakpoints, [only allowing field and variable values to be read](https://v2.ocaml.org/manual/debugger.html#s%3Adebugger-examining-values).
 
@@ -75,10 +90,3 @@ The idea to use a toplevel to support this [originated](https://sympa.inria.fr/s
 > What it allows you to do is call `UTop_main.interact ()` somewhere in your program. When the execution reaches this point, you get a toplevel in the context of the call to `UTop_main.interact`, allowing you to inspect the environment to understand what is happening
 
 This project is an implementation of this idea.
-
-An early version used a tweaked utop as a runtime dependency, but that caused some problems:
-
-- [Transitive dependencies can't (yet) be vendored easily without manually mangling names](https://github.com/ocaml/dune/issues/3335)
-- utop's completion system doesn't pick up some bindings, for unknown reasons
-
-As such, the current version uses only the [essential code](https://github.com/ocaml-community/utop/blob/master/src/lib/uTop_main.ml) from utop interact, and uses [linenoise](https://github.com/ocaml-community/ocaml-linenoise/) to provide a usable REPL with completions (there are also issues with combining [`Toploop.loop`](https://github.com/ocaml/ocaml/blob/trunk/toplevel/toploop.ml) and utop interact).

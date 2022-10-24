@@ -3,4 +3,5 @@ type t =
   | B
 
 let info = "hello"
-let empty = A info
+let t = A info
+let succ x = x + 1

@@ -1,9 +1,11 @@
-let succ x = x + 1
+let z = Lib.t
 
 let () =
   let xs = [1; 2; 3] in
-  let z = Lib.empty in
-  let f a = [%interact] in
+  let y = ref 1 in
+  let f a = [%interact: int] in
   print_endline "hello!";
-  f 2;
+  let x = f 2 in
+  Format.printf "x is: %d@." x;
+  Format.printf "y is now: %d@." !y;
   print_endline "goodbye!"
