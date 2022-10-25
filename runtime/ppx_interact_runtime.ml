@@ -1,3 +1,25 @@
+let view_file ?(context = (4, 2)) line file =
+  let ic = open_in file in
+  let rec loop skip left =
+    if left <= 0 then []
+    else
+      try
+        let line = input_line ic in
+        if skip > 0 then loop (skip - 1) left
+        else
+          let line = if skip = 0 then line else line in
+          line :: loop 0 (left - 1)
+      with End_of_file -> []
+  in
+  let before, after = context in
+  let lines = loop (line - before - 1) (before + after + 1) in
+  let divider = String.init 60 (fun _ -> '_') in
+  print_endline divider;
+  List.iter print_endline lines;
+  print_endline divider;
+  print_endline "";
+  close_in ic
+
 let eval text =
   let lexbuf = Lexing.from_string text in
   let phrase = !Toploop.parse_toplevel_phrase lexbuf in

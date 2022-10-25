@@ -109,7 +109,7 @@ let traverse () =
                 [%e Exp.constant ~loc (Const.int (List.length env.bindings))]]
           else [%expr ""]
         in
-        let status_print =
+        let _status_print =
           [%expr
             Format.printf "At line %d in module %s%s.%s@." __LINE__ __MODULE__
               [%e variable_stats] [%e debug]]
@@ -123,7 +123,7 @@ let traverse () =
           | Some _ -> (ret_name, [], Lident ret_name) :: env.bindings
         in
         let elts = List.map elt all_bindings in
-        let toplevel =
+        let toplevel_call =
           match utop with
           | true ->
             [%expr
@@ -134,10 +134,39 @@ let traverse () =
               Ppx_interact_runtime.interact ~unit:__MODULE__ ~loc:__POS__
                 ~values:[%e build_list ~loc elts] ()]
         in
+        let use_bat = true in
+        let show_source =
+          let file_name = loc.loc_start.pos_fname in
+          let line = loc.loc_start.pos_lnum in
+          match use_bat with
+          | false ->
+            [%expr
+              Ppx_interact_runtime.view_file [%e Ast.eint ~loc line]
+                [%e Ast.estring ~loc file_name]]
+          | true ->
+            [%expr
+              Unix.(
+                create_process "bat"
+                  [|
+                    "--paging=never";
+                    "--line-range";
+                    [%e
+                      Ast.estring ~loc
+                        (Format.asprintf "%d:%d" (line - 4) (line + 2))];
+                    "--highlight-line";
+                    [%e Ast.estring ~loc (string_of_int line)];
+                    [%e Ast.estring ~loc file_name];
+                    "--style";
+                    "header,numbers,grid";
+                  |]
+                  stdin stdout stderr)
+              |> ignore]
+        in
         let breakpoint =
           [%expr
-            [%e status_print];
-            [%e toplevel]]
+            (* [%e status_print]; *)
+            [%e show_source];
+            [%e toplevel_call]]
         in
         let breakpoint_ret =
           let ret_pat = Ast.ppat_var ~loc { loc; txt = ret_name } in
@@ -157,8 +186,9 @@ let traverse () =
       | _ -> super#expression e env
   end
 
-let transform_impl str =
+let transform_impl ctxt str =
+  let _file = Expansion_context.Base.code_path ctxt |> Code_path.file_path in
   let s, _ = (traverse ())#structure str empty_env in
   s
 
-let () = Driver.register_transformation ~impl:transform_impl "ppx_interact"
+let () = Driver.V2.register_transformation ~impl:transform_impl "ppx_interact"

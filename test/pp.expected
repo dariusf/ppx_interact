@@ -4,7 +4,11 @@ let a () = let e = 1 in 2
 let () =
   let _ =
     let d = 3 in
-    Format.printf "At line %d in module %s%s.%s@." __LINE__ __MODULE__ "" "";
+    (let open Unix in
+       create_process "bat"
+         [|"--paging=never";"--line-range";"34:40";"--highlight-line";"38";"test.ml";"--style";"header,numbers,grid"|]
+         stdin stdout stderr)
+      |> ignore;
     Ppx_interact_runtime.interact ~unit:__MODULE__ ~loc:__POS__
       ~values:[V ("d", d);
               V ("a", a);
@@ -12,14 +16,22 @@ let () =
               V ("one", A.one)] () in
   let b = 2 in
   let f a =
-    Format.printf "At line %d in module %s%s.%s@." __LINE__ __MODULE__ "" "";
+    (let open Unix in
+       create_process "bat"
+         [|"--paging=never";"--line-range";"37:43";"--highlight-line";"41";"test.ml";"--style";"header,numbers,grid"|]
+         stdin stdout stderr)
+      |> ignore;
     Ppx_interact_runtime.interact ~unit:__MODULE__ ~loc:__POS__
       ~values:[V ("a", a);
               V ("b", b);
               V ("a", a);
               V ("nested", A.C.nested);
               V ("one", A.one)] () in
-  (Format.printf "At line %d in module %s%s.%s@." __LINE__ __MODULE__ "" "";
+  ((let open Unix in
+      create_process "bat"
+        [|"--paging=never";"--line-range";"38:44";"--highlight-line";"42";"test.ml";"--style";"header,numbers,grid"|]
+        stdin stdout stderr)
+     |> ignore;
    Ppx_interact_runtime.interact ~unit:__MODULE__ ~loc:__POS__
      ~values:[V ("f", f);
              V ("b", b);
@@ -31,8 +43,11 @@ module B =
   struct
     let inside = 2
     let () =
-      Format.printf "At line %d in module %s%s.%s@." __LINE__ __MODULE__ ""
-        "";
+      (let open Unix in
+         create_process "bat"
+           [|"--paging=never";"--line-range";"43:49";"--highlight-line";"47";"test.ml";"--style";"header,numbers,grid"|]
+           stdin stdout stderr)
+        |> ignore;
       Ppx_interact_runtime.interact ~unit:__MODULE__ ~loc:__POS__
         ~values:[V ("inside", inside);
                 V ("a", a);
