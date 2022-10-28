@@ -24,6 +24,16 @@ type env = {
 
 let empty_env = { module_context = []; bindings = [] }
 
+(* copied from Ast_traverse *)
+let var_names_of =
+  object
+    inherit [string list] Ast_traverse.fold as super
+
+    method! pattern p acc =
+      let acc = super#pattern p acc in
+      match p.ppat_desc with Ppat_var { txt; _ } -> txt :: acc | _ -> acc
+  end
+
 let traverse () =
   object
     inherit [env] Ast_traverse.fold_map as super
@@ -64,15 +74,19 @@ let traverse () =
     method! expression e env =
       let open Ast_helper in
       match e.pexp_desc with
-      | Pexp_fun (_, _, { ppat_desc = Ppat_var { txt = v; _ }; _ }, _) ->
-        (* update, and only then recurse into subexpressions *)
-        let e, env =
-          super#expression e
-            {
-              env with
-              bindings = (v, env.module_context, Lident v) :: env.bindings;
-            }
+      | Pexp_fun (_, _, pat, _) ->
+        let vs = var_names_of#pattern pat [] in
+        (* update env, and only then recurse into subexpressions *)
+        let env1 =
+          List.fold_right
+            (fun c t ->
+              {
+                t with
+                bindings = (c, env.module_context, Lident c) :: t.bindings;
+              })
+            vs env
         in
+        let e, env = super#expression e env1 in
         (e, env)
       | Pexp_extension ({ txt = s; _ }, payload) when String.equal s "interact"
         ->
