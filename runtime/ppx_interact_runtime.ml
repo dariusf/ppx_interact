@@ -1,6 +1,5 @@
-let view_file ?(use_bat = false) ?(context = (4, 2)) line file =
-  match use_bat with
-  | false ->
+let view_file ?(use_bat = true) ?(context = (4, 2)) line file =
+  let show () =
     let ic = open_in file in
     let rec loop skip left =
       if left <= 0 then []
@@ -21,21 +20,30 @@ let view_file ?(use_bat = false) ?(context = (4, 2)) line file =
     print_endline divider;
     print_endline "";
     close_in ic
+  in
+  match use_bat with
+  | false -> show ()
   | true ->
-    Unix.(
-      create_process "bat"
-        [|
-          "--paging=never";
-          "--line-range";
-          Format.asprintf "%d:%d" (line - fst context) (line + snd context);
-          "--highlight-line";
-          string_of_int line;
-          file;
-          "--style";
-          "header,numbers,grid";
-        |]
-        stdin stdout stderr
-      |> waitpid [] |> ignore)
+    let open Unix in
+    (match
+       create_process "bat"
+         [|
+           "--paging=never";
+           "--line-range";
+           Format.asprintf "%d:%d" (line - fst context) (line + snd context);
+           "--highlight-line";
+           string_of_int line;
+           file;
+           "--style";
+           "header,numbers,grid";
+         |]
+         stdin stdout stderr
+       |> waitpid [] |> snd
+     with
+    | WEXITED 0 -> ()
+    | WEXITED _ | WSIGNALED _ | WSTOPPED _
+    | (exception Unix_error (ENOENT, "create_process", "bat")) ->
+      show ())
 
 let eval text =
   let lexbuf = Lexing.from_string text in
