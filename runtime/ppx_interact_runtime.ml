@@ -34,8 +34,8 @@ let view_file ?(use_bat = false) ?(context = (4, 2)) line file =
           "--style";
           "header,numbers,grid";
         |]
-        stdin stdout stderr)
-    |> ignore
+        stdin stdout stderr
+      |> waitpid [] |> ignore)
 
 let eval text =
   let lexbuf = Lexing.from_string text in
