@@ -138,30 +138,11 @@ let traverse () =
         let show_source =
           let file_name = loc.loc_start.pos_fname in
           let line = loc.loc_start.pos_lnum in
-          match use_bat with
-          | false ->
-            [%expr
-              Ppx_interact_runtime.view_file [%e Ast.eint ~loc line]
-                [%e Ast.estring ~loc file_name]]
-          | true ->
-            [%expr
-              Unix.(
-                create_process "bat"
-                  [|
-                    "--paging=never";
-                    "--line-range";
-                    [%e
-                      Ast.estring ~loc
-                        (Format.asprintf "%d:%d" (line - 4) (line + 2))];
-                    "--highlight-line";
-                    [%e Ast.estring ~loc (string_of_int line)];
-                    [%e Ast.estring ~loc file_name];
-                    "--style";
-                    "header,numbers,grid";
-                  |]
-                  stdin stdout stderr)
-              |> ignore]
+          [%expr
+            Ppx_interact_runtime.view_file ~use_bat:[%e Ast.ebool ~loc use_bat]
+              [%e Ast.eint ~loc line] [%e Ast.estring ~loc file_name]]
         in
+
         let breakpoint =
           [%expr
             (* [%e status_print]; *)
