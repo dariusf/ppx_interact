@@ -1,3 +1,9 @@
+(* box-drawing characters *)
+let box_h = "─"
+let box_v = "│"
+let box_t = "┬"
+let box_bot = "┴"
+
 let view_file ?(use_bat = true) ?(context = (4, 2)) line file =
   let show () =
     let ic = open_in file in
@@ -14,11 +20,22 @@ let view_file ?(use_bat = true) ?(context = (4, 2)) line file =
     in
     let before, after = context in
     let lines = loop (line - before - 1) (before + after + 1) in
-    let divider = String.init 60 (fun _ -> '_') in
-    print_endline divider;
-    List.iter print_endline lines;
-    print_endline divider;
-    print_endline "";
+    let line_number_width =
+      2 + (log10 (line + after |> float_of_int) |> int_of_float)
+    in
+    let title_width = line_number_width + 3 in
+    let divider joint =
+      List.init 60 (fun i -> if i = line_number_width + 1 then joint else box_h)
+      |> String.concat ""
+    in
+    print_endline (divider box_h);
+    print_endline (String.init title_width (fun _ -> ' ') ^ file);
+    print_endline (divider box_t);
+    List.iteri
+      (fun i l ->
+        Format.printf "%*d %s %s\n" line_number_width (i + line - 2) box_v l)
+      lines;
+    print_endline (divider box_bot);
     close_in ic
   in
   match use_bat with
