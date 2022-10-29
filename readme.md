@@ -54,6 +54,10 @@ At line 1 in module Dune__exe__Example.
 x = 3
 ```
 
+Toplevel directives are available. Standard things like `#use "topfind"` to `#require` and `#show` the module signatures of a package are possible.
+
+It is also possible to `#trace` functions and call them on values in context. This persists across breakpoints, so use `#untrace_all` to disable tracing.
+
 # Usage
 
 Build a bytecode executable using the following setup:
