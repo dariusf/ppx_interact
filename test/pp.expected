@@ -4,7 +4,7 @@ let a () = let e = 1 in 2
 let () =
   let _ =
     let d = 3 in
-    Ppx_interact_runtime.view_file ~use_bat:true 38 "test.ml";
+    Ppx_interact_runtime.view_file 38 "test.ml";
     Ppx_interact_runtime.interact ~unit:__MODULE__ ~loc:__POS__
       ~values:[V ("d", d);
               V ("a", a);
@@ -12,14 +12,14 @@ let () =
               V ("one", A.one)] () in
   let b = 2 in
   let f a =
-    Ppx_interact_runtime.view_file ~use_bat:true 41 "test.ml";
+    Ppx_interact_runtime.view_file 41 "test.ml";
     Ppx_interact_runtime.interact ~unit:__MODULE__ ~loc:__POS__
       ~values:[V ("a", a);
               V ("b", b);
               V ("a", a);
               V ("nested", A.C.nested);
               V ("one", A.one)] () in
-  (Ppx_interact_runtime.view_file ~use_bat:true 42 "test.ml";
+  (Ppx_interact_runtime.view_file 42 "test.ml";
    Ppx_interact_runtime.interact ~unit:__MODULE__ ~loc:__POS__
      ~values:[V ("f", f);
              V ("b", b);
@@ -31,7 +31,7 @@ module B =
   struct
     let inside = 2
     let () =
-      Ppx_interact_runtime.view_file ~use_bat:true 47 "test.ml";
+      Ppx_interact_runtime.view_file 47 "test.ml";
       Ppx_interact_runtime.interact ~unit:__MODULE__ ~loc:__POS__
         ~values:[V ("inside", inside);
                 V ("a", a);

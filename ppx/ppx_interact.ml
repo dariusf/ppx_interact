@@ -148,13 +148,12 @@ let traverse () =
               Ppx_interact_runtime.interact ~unit:__MODULE__ ~loc:__POS__
                 ~values:[%e build_list ~loc elts] ()]
         in
-        let use_bat = true in
         let show_source =
           let file_name = loc.loc_start.pos_fname in
           let line = loc.loc_start.pos_lnum in
           [%expr
-            Ppx_interact_runtime.view_file ~use_bat:[%e Ast.ebool ~loc use_bat]
-              [%e Ast.eint ~loc line] [%e Ast.estring ~loc file_name]]
+            Ppx_interact_runtime.view_file [%e Ast.eint ~loc line]
+              [%e Ast.estring ~loc file_name]]
         in
 
         let breakpoint =
