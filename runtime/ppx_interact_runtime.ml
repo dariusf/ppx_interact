@@ -40,9 +40,9 @@ let view_file ?(context = (4, 2)) line file =
     Format.printf "%s@." (divider box_bot);
     close_in ic
   in
-  match use_bat with
-  | false -> show ()
-  | true ->
+  match Sys.getenv_opt "NO_BAT" with
+  | Some _ -> show ()
+  | None ->
     let open Unix in
     (match
        create_process "bat"
@@ -64,20 +64,10 @@ let view_file ?(context = (4, 2)) line file =
     | (exception Unix_error (ENOENT, "create_process", "bat")) ->
       show ())
 
-let read () =
-  let lexbuf = Lexing.from_function Topcommon.refill_lexbuf in
-  let phrase = !Toploop.parse_toplevel_phrase lexbuf in
-  ignore (Toploop.execute_phrase true Format.std_formatter phrase)
-
 let eval ~show text =
   let lexbuf = Lexing.from_string text in
   let phrase = !Toploop.parse_toplevel_phrase lexbuf in
   ignore (Toploop.execute_phrase show Format.std_formatter phrase)
-
-let get_required_label name args =
-  match List.find (fun (lab, _) -> lab = Asttypes.Labelled name) args with
-  | _, x -> x
-  | exception Not_found -> None
 
 exception Found of Env.t
 exception Term of int
@@ -216,6 +206,7 @@ let linenoise_prompt completion_words =
 (** see https://github.com/ocaml-community/utop/blob/master/src/lib/uTop_main.ml *)
 let interact ?(search_path = []) ?(build_dir = "_build") ~unit
     ~loc:(fname, lnum, cnum, _) ?(init = []) ~values () =
+  let verbose = Sys.getenv_opt "VERBOSE" |> Option.is_some in
   Toploop.initialize_toplevel_env ();
   let search_path =
     walk build_dir ~init:search_path ~f:(fun dir acc -> dir :: acc)
@@ -225,8 +216,12 @@ let interact ?(search_path = []) ?(build_dir = "_build") ~unit
     with Not_found ->
       Printf.ksprintf failwith "%s.cmt not found in search path!" unit
   in
-  (* print_endline cmt_fname; *)
   let cmt_infos = Cmt_format.read_cmt cmt_fname in
+  let get_required_label name args =
+    match List.find (fun (lab, _) -> lab = Asttypes.Labelled name) args with
+    | _, x -> x
+    | exception Not_found -> None
+  in
   let expr next (e : Typedtree.expression) =
     match e.exp_desc with
     | Texp_apply (_, args) ->
@@ -271,7 +266,7 @@ let interact ?(search_path = []) ?(build_dir = "_build") ~unit
 
        List.iter
          (fun line ->
-           try eval ~show:true line
+           try eval ~show:verbose line
            with exn ->
              Format.printf "initialization failed: %s@." line;
              Location.report_exception Format.err_formatter exn)
@@ -282,15 +277,16 @@ let interact ?(search_path = []) ?(build_dir = "_build") ~unit
            let ic = open_in oi in
            let s = really_input_string ic (in_channel_length ic) in
            begin
-             try eval ~show:true s with
+             try eval ~show:verbose s with
              | End_of_file -> ()
              | exn -> Location.report_exception Format.err_formatter exn
            end;
-           close_in_noerr ic)
+           close_in_noerr ic;
+           if verbose then Format.printf "Loaded %s@." oi)
          (Toploop2.find_ocamlinit ());
 
        let use_linenoise =
-         Option.is_some (Sys.getenv_opt "LINENOISE")
+         Option.is_some (Sys.getenv_opt "NO_DOWN")
          ||
          try
            Load_path.find "down.top" |> ignore;
