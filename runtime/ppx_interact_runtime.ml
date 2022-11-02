@@ -178,8 +178,8 @@ let linenoise_prompt completion_words =
       with exn -> Location.report_exception Format.err_formatter exn)
 
 (** see https://github.com/ocaml-community/utop/blob/master/src/lib/uTop_main.ml *)
-let interact ?(use_linenoise = true) ?(search_path = []) ?(build_dir = "_build")
-    ~unit ~loc:(fname, lnum, cnum, _) ?(init = []) ~values () =
+let interact ?(search_path = []) ?(build_dir = "_build") ~unit
+    ~loc:(fname, lnum, cnum, _) ?(init = []) ~values () =
   Toploop.initialize_toplevel_env ();
   let search_path =
     walk build_dir ~init:search_path ~f:(fun dir acc -> dir :: acc)
@@ -245,7 +245,8 @@ let interact ?(use_linenoise = true) ?(search_path = []) ?(build_dir = "_build")
        (* eval "let c = b + 1;;"; *)
        (* let v : int = Obj.obj (Toploop.getvalue "c") in *)
        (* Format.printf "v = %d@." v; *)
-       match false && use_linenoise with
+       let use_linenoise = Sys.getenv_opt "LINENOISE" |> Option.is_some in
+       match use_linenoise with
        | false -> Toploop2.loop ()
        | true -> linenoise_prompt names
      with exn ->
