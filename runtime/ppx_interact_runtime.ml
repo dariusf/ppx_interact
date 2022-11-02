@@ -62,10 +62,15 @@ let view_file ?(use_bat = true) ?(context = (4, 2)) line file =
     | (exception Unix_error (ENOENT, "create_process", "bat")) ->
       show ())
 
-let eval text =
+let read () =
+  let lexbuf = Lexing.from_function Topcommon.refill_lexbuf in
+  let phrase = !Toploop.parse_toplevel_phrase lexbuf in
+  ignore (Toploop.execute_phrase true Format.std_formatter phrase)
+
+let eval ~show text =
   let lexbuf = Lexing.from_string text in
   let phrase = !Toploop.parse_toplevel_phrase lexbuf in
-  ignore (Toploop.execute_phrase false Format.std_formatter phrase)
+  ignore (Toploop.execute_phrase show Format.std_formatter phrase)
 
 let get_required_label name args =
   match List.find (fun (lab, _) -> lab = Asttypes.Labelled name) args with
@@ -90,6 +95,89 @@ let walk dir ~init ~f =
   | exception Unix.Unix_error (ENOENT, _, _) -> init
   | _ -> loop dir init
 
+(** https://github.com/ocaml/ocaml/blob/trunk/toplevel/toploop.ml *)
+module Toploop2 = struct
+  exception PPerror
+
+  let phrase_buffer = Buffer.create 1024
+
+  let loop () =
+    let ppf = Format.std_formatter in
+    Clflags.debug := true;
+    Location.formatter_for_warnings := ppf;
+    (* don't initialize the toplevel environment, as we don't want to clear bindings passed in *)
+    let lb = Lexing.from_function Topcommon.refill_lexbuf in
+    Location.init lb "//toplevel//";
+    Location.input_name := "//toplevel//";
+    Location.input_lexbuf := Some lb;
+    Location.input_phrase_buffer := Some phrase_buffer;
+    Sys.catch_break true;
+    (* loading ocamlinit is done elsewhere *)
+    try
+      while true do
+        let snap = Btype.snapshot () in
+        try
+          Lexing.flush_input lb;
+          Buffer.reset phrase_buffer;
+          Location.reset ();
+          Warnings.reset_fatal ();
+          Topcommon.first_line := true;
+          let phr =
+            try !Toploop.parse_toplevel_phrase lb with Exit -> raise PPerror
+          in
+          let phr = Toploop.preprocess_phrase ppf phr in
+          Env.reset_cache_toplevel ();
+          ignore (Toploop.execute_phrase true ppf phr)
+        with
+        | Sys.Break ->
+          Btype.backtrack snap;
+          raise End_of_file
+        | PPerror -> ()
+        | x ->
+          Location.report_exception ppf x;
+          Btype.backtrack snap
+      done
+    with End_of_file -> ()
+end
+
+let linenoise_prompt completion_words =
+  let rec user_input prompt f =
+    match LNoise.linenoise prompt with
+    | None -> ()
+    | Some v ->
+      f v;
+      user_input prompt f
+  in
+  (* this goes from front-to-back, which is the right order, so more recent bindings are suggested first *)
+  LNoise.set_hints_callback (fun inp ->
+      match inp with
+      | "" -> None
+      | _ ->
+        Option.bind
+          (List.find_opt (String.starts_with ~prefix:inp) completion_words)
+          (fun sugg ->
+            let sl = String.length sugg in
+            let il = String.length inp in
+            if il < sl then
+              let s = String.sub sugg il (sl - il) in
+              Some (s, LNoise.White, false)
+            else None));
+  LNoise.set_completion_callback (fun so_far ln_completions ->
+      List.filter (String.starts_with ~prefix:so_far) completion_words
+      |> List.iter (LNoise.add_completion ln_completions));
+  user_input "> " (fun s ->
+      let s = String.trim s in
+      let doesn't_end_with_semicolons s =
+        let l = String.length s in
+        l < 2 || String.sub s (l - 2) 2 <> ";;"
+      in
+      let s = if doesn't_end_with_semicolons s then s ^ ";;" else s in
+      LNoise.history_add s |> ignore;
+      (* LNoise.history_save ~filename:"history.txt" |> ignore; *)
+      try eval ~show:true s
+      with exn -> Location.report_exception Format.err_formatter exn)
+
+(** see https://github.com/ocaml-community/utop/blob/master/src/lib/uTop_main.ml *)
 let interact ?(use_linenoise = true) ?(search_path = []) ?(build_dir = "_build")
     ~unit ~loc:(fname, lnum, cnum, _) ?(init = []) ~values () =
   Toploop.initialize_toplevel_env ();
@@ -143,16 +231,11 @@ let interact ?(use_linenoise = true) ?(search_path = []) ?(build_dir = "_build")
        Toploop.toplevel_env := env;
        (* let idents = Env.diff Env.empty env in *)
        (* List.iter print_endline (List.map Ident.name idents); *)
-       let eval text =
-         let lexbuf = Lexing.from_string text in
-         let phrase = !Toploop.parse_toplevel_phrase lexbuf in
-         ignore (Toploop.execute_phrase true Format.std_formatter phrase)
-       in
        let names = List.map (fun (V (name, _)) -> name) values in
 
        List.iter
          (fun line ->
-           try eval line
+           try eval ~show:true line
            with exn ->
              Format.printf "initialization failed: %s@." line;
              Location.report_exception Format.err_formatter exn)
@@ -162,48 +245,9 @@ let interact ?(use_linenoise = true) ?(search_path = []) ?(build_dir = "_build")
        (* eval "let c = b + 1;;"; *)
        (* let v : int = Obj.obj (Toploop.getvalue "c") in *)
        (* Format.printf "v = %d@." v; *)
-       match use_linenoise with
-       | false ->
-         while true do
-           let s = read_line () in
-           eval s
-         done
-       | true ->
-         let rec user_input prompt f =
-           match LNoise.linenoise prompt with
-           | None -> ()
-           | Some v ->
-             f v;
-             user_input prompt f
-         in
-         (* this goes from front-to-back, which is the right order, so more recent bindings are suggested first *)
-         LNoise.set_hints_callback (fun inp ->
-             match inp with
-             | "" -> None
-             | _ ->
-               Option.bind
-                 (List.find_opt (String.starts_with ~prefix:inp) names)
-                 (fun sugg ->
-                   let sl = String.length sugg in
-                   let il = String.length inp in
-                   if il < sl then
-                     let s = String.sub sugg il (sl - il) in
-                     Some (s, LNoise.White, false)
-                   else None));
-         LNoise.set_completion_callback (fun so_far ln_completions ->
-             List.filter (String.starts_with ~prefix:so_far) names
-             |> List.iter (LNoise.add_completion ln_completions));
-         user_input "> " (fun s ->
-             let s = String.trim s in
-             let doesn't_end_with_semicolons s =
-               let l = String.length s in
-               l < 2 || String.sub s (l - 2) 2 <> ";;"
-             in
-             let s = if doesn't_end_with_semicolons s then s ^ ";;" else s in
-             LNoise.history_add s |> ignore;
-             (* LNoise.history_save ~filename:"history.txt" |> ignore; *)
-             try eval s
-             with exn -> Location.report_exception Format.err_formatter exn)
+       match false && use_linenoise with
+       | false -> Toploop2.loop ()
+       | true -> linenoise_prompt names
      with exn ->
        Location.report_exception Format.err_formatter exn;
        exit 2)
