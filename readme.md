@@ -58,6 +58,10 @@ Toplevel directives are available. Standard things like `#use "topfind"` to `#re
 
 It is also possible to `#trace` functions and call them on values in context. This persists across breakpoints, so use `#untrace_all` to disable tracing.
 
+[down](https://github.com/dbuenzli/down) works and will be automatically loaded if available. Otherwise, a simpler linenoise frontend with some support for completions will be used. This may be explicitly enabled by setting the `LINENOISE` environment variable for testing.
+
+.ocamlinit files are loaded, so if you use one to `#install_printer`s and open modules for `dune utop`, everything should work the same.
+
 # Usage
 
 Build a bytecode executable using the following setup:

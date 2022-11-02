@@ -287,11 +287,19 @@ let interact ?(search_path = []) ?(build_dir = "_build") ~unit
            close_in_noerr ic)
          (Toploop2.find_ocamlinit ());
 
+       let use_linenoise =
+         Option.is_some (Sys.getenv_opt "LINENOISE")
+         ||
+         try
+           Load_path.find "down.top" |> ignore;
+           Toploop.use_file Format.std_formatter "down.top" |> not
+         with Not_found -> true
+       in
+
        (* eval "b;;"; *)
        (* eval "let c = b + 1;;"; *)
        (* let v : int = Obj.obj (Toploop.getvalue "c") in *)
        (* Format.printf "v = %d@." v; *)
-       let use_linenoise = Sys.getenv_opt "LINENOISE" |> Option.is_some in
        match use_linenoise with
        | false -> Toploop2.loop ()
        | true -> linenoise_prompt names
