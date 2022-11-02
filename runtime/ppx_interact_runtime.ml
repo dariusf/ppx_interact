@@ -138,6 +138,40 @@ module Toploop2 = struct
           Btype.backtrack snap
       done
     with End_of_file -> ()
+
+  (* modified to return all .ocamlinit files, in order *)
+  let find_ocamlinit () =
+    let exists_in_dir dir file =
+      match dir with
+      | None -> None
+      | Some dir ->
+        let file = Filename.concat dir file in
+        if Sys.file_exists file then Some file else None
+    in
+    let home_dir () = Sys.getenv_opt "HOME" in
+    let config_dir () =
+      if Sys.win32 then None
+      else
+        match Sys.getenv_opt "XDG_CONFIG_HOME" with
+        | Some _ as v -> v
+        | None ->
+          (match home_dir () with
+          | None -> None
+          | Some dir -> Some (Filename.concat dir ".config"))
+    in
+    let init_ml = Filename.concat "ocaml" "init.ml" in
+    let ocamlinit = ".ocamlinit" in
+    let local = if Sys.file_exists ocamlinit then [ocamlinit] else [] in
+    let global =
+      match exists_in_dir (config_dir ()) init_ml with
+      | Some v -> [v]
+      | None ->
+        (match exists_in_dir (home_dir ()) ocamlinit with
+        | Some v -> [v]
+        | None -> [])
+    in
+    (* load global first, then local *)
+    global @ local
 end
 
 let linenoise_prompt completion_words =
@@ -240,6 +274,18 @@ let interact ?(search_path = []) ?(build_dir = "_build") ~unit
              Format.printf "initialization failed: %s@." line;
              Location.report_exception Format.err_formatter exn)
          init;
+
+       List.iter
+         (fun oi ->
+           let ic = open_in oi in
+           let s = really_input_string ic (in_channel_length ic) in
+           begin
+             try eval ~show:true s with
+             | End_of_file -> ()
+             | exn -> Location.report_exception Format.err_formatter exn
+           end;
+           close_in_noerr ic)
+         (Toploop2.find_ocamlinit ());
 
        (* eval "b;;"; *)
        (* eval "let c = b + 1;;"; *)
