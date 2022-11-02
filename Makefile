@@ -5,4 +5,4 @@ all:
 
 .PHONY: example
 example:
-	OCAMLRUNPARAM=b dune exec example/example.bc
+	OCAMLRUNPARAM=b dune exec examples/example.bc

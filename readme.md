@@ -10,7 +10,7 @@ let succ x = x + 1
 
 let () =
   let xs = [1; 2; 3] in
-  let f a =
+  let f (a : int) =
     [%interact]
   in
   print_endline "hello!";
@@ -21,12 +21,22 @@ let () =
 A REPL will start when it is evaluated, allowing arbitrary expressions to be evaluated using variables in scope.
 
 ```
-$ dune exec example/example.bc
+$ dune exec examples/simple.bc
 hello!
-At line 6 in module Dune__exe__Example.
-> succ;;
+────────────────────────────────────────────────────────────
+     examples/simple.ml
+───┬────────────────────────────────────────────────────────
+ 1 │ let succ x = x + 1
+ 2 │
+ 3 │ let () =
+ 4 │   let xs = [1; 2; 3] in
+ 5 │   let f (a : int) = [%interact] in
+ 6 │   print_endline "hello!";
+ 7 │   f 2;
+───┴────────────────────────────────────────────────────────
+> succ
 - : int -> int = <fun>
-> List.length xs + succ a;;
+> List.length xs + succ a
 - : int = 6
 > ^D
 goodbye!
@@ -47,7 +57,6 @@ Format.printf "x = %d@." x
 ```
 
 ```
-At line 1 in module Dune__exe__Example.
 > _ret := 3
 - : unit = ()
 > ^D
@@ -58,9 +67,13 @@ Toplevel directives are available. Standard things like `#use "topfind"` to `#re
 
 It is also possible to `#trace` functions and call them on values in context. This persists across breakpoints, so use `#untrace_all` to disable tracing.
 
-[down](https://github.com/dbuenzli/down) works and will be automatically loaded if available. Otherwise, a simpler linenoise frontend with some support for completions will be used. This may be explicitly enabled by setting the `LINENOISE` environment variable for testing.
-
 .ocamlinit files are loaded, so if you use one to `#install_printer`s and open modules for `dune utop`, everything should work the same.
+
+[down](https://github.com/dbuenzli/down) works and will be automatically loaded if available. Otherwise, a simpler [linenoise](https://github.com/ocaml-community/ocaml-linenoise/) REPL with support for completions will be used.
+
+If [bat](https://github.com/sharkdp/bat) is installed, it will be invoked to show the context with syntax highlighting.
+
+See the [docs](docs.md) for more details.
 
 # Usage
 
