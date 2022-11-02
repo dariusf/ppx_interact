@@ -28,16 +28,16 @@ let view_file ?(context = (4, 2)) line file =
       List.init 60 (fun i -> if i = line_number_width + 1 then joint else box_h)
       |> String.concat ""
     in
-    print_endline (divider box_h);
-    print_endline (String.init title_width (fun _ -> ' ') ^ file);
-    print_endline (divider box_t);
+    Format.printf "%s@." (divider box_h);
+    Format.printf "%s@." (String.init title_width (fun _ -> ' ') ^ file);
+    Format.printf "%s@." (divider box_t);
     List.iteri
       (fun i l ->
         Format.printf "%*d %s %s\n" line_number_width
           (i + max 1 (line - before))
           box_v l)
       lines;
-    print_endline (divider box_bot);
+    Format.printf "%s@." (divider box_bot);
     close_in ic
   in
   match use_bat with
