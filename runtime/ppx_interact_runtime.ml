@@ -4,7 +4,8 @@ let box_v = "│"
 let box_t = "┬"
 let box_bot = "┴"
 
-let view_file ?(use_bat = true) ?(context = (4, 2)) line file =
+let view_file ?(context = (4, 2)) line file =
+  let before, after = context in
   let show () =
     let ic = open_in file in
     let rec loop skip left =
@@ -18,8 +19,7 @@ let view_file ?(use_bat = true) ?(context = (4, 2)) line file =
             line :: loop 0 (left - 1)
         with End_of_file -> []
     in
-    let before, after = context in
-    let lines = loop (line - before - 1) (before + after + 1) in
+    let lines = loop (max 0 (line - before - 1)) (before + after + 1) in
     let line_number_width =
       2 + (log10 (line + after |> float_of_int) |> int_of_float)
     in
@@ -33,7 +33,9 @@ let view_file ?(use_bat = true) ?(context = (4, 2)) line file =
     print_endline (divider box_t);
     List.iteri
       (fun i l ->
-        Format.printf "%*d %s %s\n" line_number_width (i + line - 2) box_v l)
+        Format.printf "%*d %s %s\n" line_number_width
+          (i + max 1 (line - before))
+          box_v l)
       lines;
     print_endline (divider box_bot);
     close_in ic
@@ -47,7 +49,7 @@ let view_file ?(use_bat = true) ?(context = (4, 2)) line file =
          [|
            "--paging=never";
            "--line-range";
-           Format.asprintf "%d:%d" (line - fst context) (line + snd context);
+           Format.asprintf "%d:%d" (line - before) (line + after);
            "--highlight-line";
            string_of_int line;
            file;
