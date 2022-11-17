@@ -2,7 +2,7 @@
  (names example simple ret)
  ; the containers dependency isn't strictly needed,
  ; it's just to show that third-party libraries can be used
- (libraries ppx_interact_runtime containers)
+ (libraries containers)
  (modes byte)
  (link_flags -linkall)
  (preprocess

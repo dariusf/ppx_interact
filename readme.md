@@ -83,11 +83,9 @@ Build a bytecode executable using the following setup:
   (executable
 -  (name example))
 +  (name example)
-+  (libraries ppx_interact_runtime)
 +  (modes byte)
 +  (link_flags -linkall)
-+  (preprocess
-+   (pps ppx_interact)))
++  (preprocess (pps ppx_interact)))
 ```
 
 - The preprocessor and runtime library are standard
