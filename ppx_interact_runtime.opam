@@ -7,7 +7,9 @@ authors: ["Darius Foo"]
 homepage: "https://github.com/dariusf/ppx_interact"
 bug-reports: "https://github.com/dariusf/ppx_interact/issues"
 depends: [
-  "dune" {>= "2.7"}
+  "ocaml"
+  "dune" {>= "3.7"}
+  "linenoise"
   "odoc" {with-doc}
 ]
 build: [

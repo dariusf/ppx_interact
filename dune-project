@@ -1,4 +1,4 @@
-(lang dune 2.7)
+(lang dune 3.7)
 
 (name ppx_interact)
 (generate_opam_files true)
@@ -13,9 +13,11 @@
 (package
  (name ppx_interact)
  (synopsis "Opens a REPL in context")
- (description "An attempt at the pry/pdb experience"))
+ (description "The pry/pdb experience via a toplevel")
+ (depends ocaml dune ppxlib))
 
 (package
  (name ppx_interact_runtime)
  (synopsis "Opens a REPL in context")
- (description "Runtime library for ppx_interact"))
+ (description "Runtime library for ppx_interact")
+ (depends ocaml dune linenoise))
