@@ -12,6 +12,7 @@ depends: [
   "linenoise"
   "odoc" {with-doc}
 ]
+dev-repo: "git+https://github.com/dariusf/ppx_interact.git"
 build: [
   ["dune" "subst"] {dev}
   [
@@ -22,8 +23,5 @@ build: [
     "-j"
     jobs
     "@install"
-    "@runtest" {with-test}
-    "@doc" {with-doc}
   ]
 ]
-dev-repo: "git+https://github.com/dariusf/ppx_interact.git"
