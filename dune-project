@@ -14,7 +14,7 @@
  (name ppx_interact)
  (synopsis "Opens a REPL in context")
  (description "The pry/pdb experience via a toplevel")
- (depends ocaml dune ppxlib))
+ (depends ocaml dune ppxlib ppx_interact_runtime))
 
 (package
  (name ppx_interact_runtime)

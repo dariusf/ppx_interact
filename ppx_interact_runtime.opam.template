@@ -8,5 +8,7 @@ build: [
     "-j"
     jobs
     "@install"
+    # remove tests
+    "@doc" {with-doc}
   ]
 ]
