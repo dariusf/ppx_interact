@@ -77,6 +77,10 @@ See the [docs](docs.md) for more details.
 
 # Usage
 
+```sh
+opam install ppx_interact
+```
+
 Build a bytecode executable using the following setup:
 
 ```diff
@@ -88,7 +92,6 @@ Build a bytecode executable using the following setup:
 +  (preprocess (pps ppx_interact)))
 ```
 
-- The preprocessor and runtime library are standard
 - The executable must be built in bytecode mode (this may be relaxed when the [native toplevel](https://github.com/ocaml/RFCs/pull/15) is mature)
 - `-linkall` is typical for [building custom toplevels](https://dune.readthedocs.io/en/stable/quick-start.html#building-a-custom-toplevel) and allows the use of external libraries
 
@@ -108,4 +111,4 @@ The idea to use a toplevel to support this [originated](https://sympa.inria.fr/s
 >
 > What it allows you to do is call `UTop_main.interact ()` somewhere in your program. When the execution reaches this point, you get a toplevel in the context of the call to `UTop_main.interact`, allowing you to inspect the environment to understand what is happening
 
-This project is an implementation of this idea.
+ppx_interact implements this idea.
