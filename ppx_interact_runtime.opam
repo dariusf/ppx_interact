@@ -7,9 +7,9 @@ authors: ["Darius Foo"]
 homepage: "https://github.com/dariusf/ppx_interact"
 bug-reports: "https://github.com/dariusf/ppx_interact/issues"
 depends: [
-  "ocaml"
-  "dune" {>= "3.7"}
-  "linenoise"
+  "ocaml" {>= "4.14"}
+  "dune" {>= "3.7" & >= "3.7"}
+  "linenoise" {>= "1.4.0"}
   "odoc" {with-doc}
 ]
 dev-repo: "git+https://github.com/dariusf/ppx_interact.git"
@@ -23,5 +23,7 @@ build: [
     "-j"
     jobs
     "@install"
+    # remove tests
+    "@doc" {with-doc}
   ]
 ]
