@@ -4,6 +4,7 @@ synopsis: "Opens a REPL in context"
 description: "Runtime library for ppx_interact"
 maintainer: ["darius.foo.tw@gmail.com"]
 authors: ["Darius Foo"]
+license: "MIT"
 homepage: "https://github.com/dariusf/ppx_interact"
 bug-reports: "https://github.com/dariusf/ppx_interact/issues"
 depends: [

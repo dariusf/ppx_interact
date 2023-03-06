@@ -9,6 +9,7 @@
 (authors "Darius Foo")
 
 (maintainers "darius.foo.tw@gmail.com")
+(license MIT)
 
 (package
  (name ppx_interact)

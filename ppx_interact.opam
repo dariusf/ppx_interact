@@ -4,6 +4,7 @@ synopsis: "Opens a REPL in context"
 description: "The pry/pdb experience via a toplevel"
 maintainer: ["darius.foo.tw@gmail.com"]
 authors: ["Darius Foo"]
+license: "MIT"
 homepage: "https://github.com/dariusf/ppx_interact"
 bug-reports: "https://github.com/dariusf/ppx_interact/issues"
 depends: [
