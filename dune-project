@@ -17,15 +17,5 @@
  (description "The pry/pdb experience via a toplevel")
  (depends
   (ocaml (>= 4.14))
-  (dune (>= 3.7))
   (ppxlib (>= 0.28.0))
-  ppx_interact_runtime))
-
-(package
- (name ppx_interact_runtime)
- (synopsis "Opens a REPL in context")
- (description "Runtime library for ppx_interact")
- (depends
-  (ocaml (>= 4.14))
-  (dune (>= 3.7))
   (linenoise (>= 1.4.0))))

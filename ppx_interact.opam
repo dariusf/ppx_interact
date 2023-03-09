@@ -8,10 +8,10 @@ license: "MIT"
 homepage: "https://github.com/dariusf/ppx_interact"
 bug-reports: "https://github.com/dariusf/ppx_interact/issues"
 depends: [
+  "dune" {>= "3.7"}
   "ocaml" {>= "4.14"}
-  "dune" {>= "3.7" & >= "3.7"}
   "ppxlib" {>= "0.28.0"}
-  "ppx_interact_runtime"
+  "linenoise" {>= "1.4.0"}
   "odoc" {with-doc}
 ]
 build: [
