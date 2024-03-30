@@ -212,7 +212,7 @@ let interact ?(search_path = []) ?(build_dir = "_build") ~unit
     walk build_dir ~init:search_path ~f:(fun dir acc -> dir :: acc)
   in
   let cmt_fname =
-    try Misc.find_in_path_uncap search_path (unit ^ ".cmt")
+    try Unstable.Misc.find_in_path_uncap search_path (unit ^ ".cmt")
     with Not_found ->
       Printf.ksprintf failwith "%s.cmt not found in search path!" unit
   in
@@ -254,7 +254,7 @@ let interact ?(search_path = []) ?(build_dir = "_build") ~unit
     failwith "Couldn't find location in cmt file"
   with Found env ->
     (try
-       List.iter Topdirs.dir_directory (search_path @ cmt_infos.cmt_loadpath);
+       List.iter Topdirs.dir_directory (search_path @ Unstable.get_load_paths cmt_infos);
        let env = Envaux.env_of_only_summary env in
        List.iter
          (fun (V (name, v)) -> Toploop.setvalue name (Obj.repr v))

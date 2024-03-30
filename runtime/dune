@@ -7,3 +7,8 @@
  (dev
   (flags
    (:standard -warn-error -A))))
+
+(rule
+ (targets unstable.ml)
+ (deps    unstable.cppo.ml)
+ (action  (run %{bin:cppo} -V OCAML:%{ocaml_version} %{deps} -o %{targets})))
