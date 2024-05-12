@@ -17,5 +17,6 @@
  (description "The pry/pdb experience via a toplevel")
  (depends
   (ocaml (>= 4.14))
+  (cppo :build)
   (ppxlib (>= 0.28.0))
   (linenoise (>= 1.4.0))))
