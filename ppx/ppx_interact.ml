@@ -74,15 +74,20 @@ let traverse () =
     method! expression e env =
       let open Ast_helper in
       match e.pexp_desc with
-      | Pexp_fun (_, _, pat, _) ->
-        let vs = var_names_of#pattern pat [] in
+      | Pexp_function (params, _, _) ->
+        let vs = List.fold_left (fun acc -> function 
+          | { pparam_desc = Pparam_val (_, _, pat); _ } -> (var_names_of#pattern pat []) :: acc
+          | { pparam_desc = Pparam_newtype _; _ } -> acc) [] params in
         (* update env, and only then recurse into subexpressions *)
         let env1 =
           List.fold_right
-            (fun c t ->
+            (fun cs t ->
+              let new_bindings = 
+                List.map (fun c -> (c, env.module_context, Lident c)) cs 
+              in
               {
                 t with
-                bindings = (c, env.module_context, Lident c) :: t.bindings;
+                bindings = new_bindings @ t.bindings;
               })
             vs env
         in
