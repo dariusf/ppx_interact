@@ -18,5 +18,5 @@
  (depends
   (ocaml (>= 4.14))
   (cppo :build)
-  (ppxlib (>= 0.28.0))
+  (ppxlib (>= 0.36.0))
   (linenoise (>= 1.4.0))))
