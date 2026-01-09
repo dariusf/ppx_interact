@@ -219,7 +219,7 @@ let interact ?(search_path = []) ?(build_dir = "_build") ~unit
   let cmt_infos = Cmt_format.read_cmt cmt_fname in
   let get_required_label name args =
     match List.find (fun (lab, _) -> lab = Asttypes.Labelled name) args with
-    | _, x -> x
+    | _, x -> Unstable.apply_arg_to_option x
     | exception Not_found -> None
   in
   let expr next (e : Typedtree.expression) =

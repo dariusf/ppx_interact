@@ -15,3 +15,13 @@ let get_load_paths cmt_infos =
     cmt_infos.Cmt_format.cmt_loadpath.visible @
     cmt_infos.cmt_loadpath.hidden
   #endif
+
+(* https://github.com/ocaml/ocaml/commit/e267d7b2422c101afdc683112bb067ab0ff9e195 *)
+let apply_arg_to_option a =
+  #if OCAML_VERSION < (5,4,0)
+    a
+  #else
+    match a with
+    | Typedtree.Arg e -> Some e
+    | Omitted () -> None
+  #endif
